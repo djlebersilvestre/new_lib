@@ -1,0 +1,35 @@
+#!/bin/bash
+dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
+
+run_over_changed_files() {
+  changed_files=$(git status --porcelain | grep -v 'D  ' | grep '\.rb$' | awk '{print $2}')
+
+  if [ -z "${changed_files}" ]; then
+    echo "There are no files to commit therefore there are no files to be validated"
+  else
+    bundle exec rubocop --force-exclusion $changed_files
+  fi
+}
+
+run_stats() {
+  bundle exec rubocop -fo
+}
+
+case "$1" in
+  changed)
+    run_over_changed_files
+    ;;
+  stats)
+    run_stats
+    ;;
+  *)
+    echo "Usage: $0 [changed|stats]"
+    echo ""
+    echo "Details"
+    echo " changed: runs rubocop over local git changes (before commit)"
+    echo " stats:   runs rubocop to extract overall stats of the project"
+    echo " default: if no option is given it will run 'changed' option"
+    echo ""
+    run_over_changed_files
+    ;;
+esac
